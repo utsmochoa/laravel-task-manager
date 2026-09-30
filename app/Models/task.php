@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Override;
 
-class task extends Model
+class Task extends Model
 {
-    use hasFactory;
+    use HasFactory;
 
     protected $table = 'tasks';
 
