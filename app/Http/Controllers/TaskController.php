@@ -23,7 +23,7 @@ class TaskController extends Controller
              ->latest()
              ->paginate(10);
  
-         return view('tasks.index', compact('tasks'));
+         return view('dashboard', compact('tasks'));
      }
 
    
@@ -31,6 +31,13 @@ class TaskController extends Controller
     {
         return view('tasks.create');
     }
+
+    public function show(Task $task): View
+{
+    $this->authorizeUserTask($task);
+
+    return view('tasks.show', compact('task'));
+}
 
    
     public function store(StoreTaskRequest $request): RedirectResponse
@@ -44,7 +51,7 @@ class TaskController extends Controller
         $request->user()->tasks()->create($data);
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Tarea creada correctamente.');
+            ->with('success', 'Task successfully created.');
     }
 
   
@@ -71,7 +78,7 @@ class TaskController extends Controller
         $task->update($data);
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Tarea actualizada correctamente.');
+            ->with('success', 'Tast succesfully updated.');
     }
 
    
@@ -86,14 +93,14 @@ class TaskController extends Controller
         $task->delete();
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Tarea eliminada correctamente.');
+            ->with('success', 'Task successfully deleted.');
     }
 
     
     private function authorizeUserTask(Task $task): void
     {
         if ($task->user_id !== Auth::id()) {
-            abort(403, 'Acceso no autorizado.');
+            abort(403, 'Unauthorized access.');
         }
     }
 }
