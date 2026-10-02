@@ -10,38 +10,33 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
    
     
-     public function index(Request $request): View
-     {
-         $user = $request->user();
+    public function index(Request $request): View{
+        $user = $request->user();
  
-         $tasks = $user->tasks()
-             ->latest()
-             ->paginate(10);
- 
-         return view('dashboard', compact('tasks'));
-     }
+        $tasks = $user->tasks()
+            ->latest()
+            ->paginate(10);
+        return view('dashboard', compact('tasks'));
+    }
 
    
-    public function create(): View
-    {
+    public function create(): View{
         return view('tasks.create');
     }
 
-    public function show(Task $task): View
-{
-    $this->authorizeUserTask($task);
-
-    return view('tasks.show', compact('task'));
-}
+    public function show(Task $task): View{
+        Gate::authorize('view', $task);
+        return view('tasks.show', compact('task'));
+    }
 
    
-    public function store(StoreTaskRequest $request): RedirectResponse
-    {
+    public function store(StoreTaskRequest $request): RedirectResponse{
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -55,17 +50,13 @@ class TaskController extends Controller
     }
 
   
-    public function edit(Task $task): View
-    {
-        $this->authorizeUserTask($task);
-
+    public function edit(Task $task): View{
+        Gate::authorize('update', $task);
         return view('tasks.edit', compact('task'));
     }
 
-    public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
-    {
-        $this->authorizeUserTask($task);
-
+    public function update(UpdateTaskRequest $request, Task $task): RedirectResponse{
+        Gate::authorize('update', $task);
         $data = $request->validated();
 
         if ($request->hasFile('image')) {
@@ -78,13 +69,13 @@ class TaskController extends Controller
         $task->update($data);
 
         return redirect()->route('tasks.index')
-            ->with('success', 'Tast succesfully updated.');
+            ->with('success', 'Tast successfully updated.');
     }
 
    
     public function destroy(Task $task): RedirectResponse
     {
-        $this->authorizeUserTask($task);
+        Gate::authorize('delete', $task);
 
         if ($task->image) {
             Storage::disk('public')->delete($task->image);
@@ -97,10 +88,5 @@ class TaskController extends Controller
     }
 
     
-    private function authorizeUserTask(Task $task): void
-    {
-        if ($task->user_id !== Auth::id()) {
-            abort(403, 'Unauthorized access.');
-        }
-    }
+
 }
