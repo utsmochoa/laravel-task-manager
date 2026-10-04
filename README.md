@@ -60,7 +60,7 @@ Update your `.env` file with your MySQL credentials and target database name:
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=task_manager
+DB_DATABASE=laravel_task
 DB_USERNAME=root
 DB_PASSWORD=
 ```
@@ -122,7 +122,7 @@ During the development process, the following assumptions and decisions were mad
 
 3. **Image Constraints:** Supported attachment formats are strictly validated (`jpg`, `jpeg`, `png`, `webp`) up to a maximum file size of 2048 KB (2 MB). Replacing or deleting a task automatically purges the previous image file from physical storage to prevent dead files.
 
-4. **Dashboard as Primary Route:** `/dashboard` serves as the primary route (`tasks.index`) for viewing task lists and interaction.
+4. **Dashboard and `tasks.index`:** `/dashboard` (route name `dashboard`) is the main task list and is handled by `TaskController@index`. The resource route `tasks.index` (`/tasks`) is also registered by `Route::resource` and renders the same view, but it is not the primary entry point: after creating, updating or deleting a task the user is redirected to `dashboard` with a flash confirmation message.
 
 5. **No Soft Deletes by Default:** Task deletion is permanent along with its associated image file.
 
@@ -134,7 +134,7 @@ During the development process, the following assumptions and decisions were mad
 
 - **Authentication (Laravel Breeze):** Blade-based authentication scaffolding was chosen to provide a lightweight, secure foundation covering registration, login, session management, and password hashing without introducing unnecessary SPA complexity.
 
-- **Authorization (Laravel Policy):** Implemented `TaskPolicy` registered via `AppServiceProvider` and enforced with `Gate::authorize()` on server-side controller actions (`show`, `edit`, `update`, `delete`). This guarantees complete server-side security against URL manipulation regardless of UI button visibility.
+- **Authorization (Laravel Policy):** `TaskPolicy` (`app/Policies/TaskPolicy.php`) is not registered manually: Laravel auto-discovers it by naming convention (`App\Models\Task` -> `App\Policies\TaskPolicy`). It defines only the abilities the app uses (`view`, `update`, `delete`) and is enforced with `Gate::authorize()` in the `show`, `edit`, `update` and `destroy` controller actions. Other users' tasks return a 403, regardless of UI button visibility.
 
 - **Form Requests:** Dedicated `StoreTaskRequest` and `UpdateTaskRequest` classes were created to keep validation rules decoupled from controller logic (respecting strict MVC principles).
 
@@ -142,13 +142,27 @@ During the development process, the following assumptions and decisions were mad
 
 ## Testing
 
-Automated tests were written using **PHPUnit** covering authentication guards, task CRUD operations, and Policy authorization rules.
+Automated tests use **PHPUnit**. They cover:
+
+- **Authentication (Breeze tests):** login, registration, password flows and profile.
+- **Access control:** guests are redirected from task routes, and a user cannot view, edit, update or delete another user's task (403, data unchanged).
+- **Task CRUD (`tests/Feature/TaskTest.php`):** creating, updating and deleting an own task, asserting the redirect ends successfully and shows the confirmation message.
+- **Image handling (with `Storage::fake()`):** replacing an image deletes the previous file, and deleting a task deletes its image file.
+- **Validation:** `due_date` is rejected when it is in the past on creation.
+
+Not covered by automated tests: filtering/search (not implemented), pagination and the Blade UI/styling.
 
 To run the test suite:
 
 ```bash
 php artisan test
 ```
+
+---
+
+## Optional Features Implemented
+
+None. Only the base requirements were implemented; the optional features that were considered are listed below as future improvements.
 
 ---
 

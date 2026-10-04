@@ -27,7 +27,7 @@ class UpdateTaskRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'status' => ['required', 'in:pending,in_progress,completed'],
             'due_date' => ['nullable', 'date'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ];
     }
 }
